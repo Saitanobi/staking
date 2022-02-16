@@ -213,6 +213,7 @@ contract MultiRewardsStake is ReentrancyGuard {
     }
 
     function addRewardToken(address token) external onlyDistributor updateReward(address(0)) {
+        require(_totalRewardTokens < 6, "Too many tokens");
         require(IERC20(token).balanceOf(address(this)) > 0, "Must prefund contract");
 
         // Increment total reward tokens
@@ -232,6 +233,11 @@ contract MultiRewardsStake is ReentrancyGuard {
         for (uint i = 0; i < _totalRewardTokens; i++) {
             if (i == _totalRewardTokens - 1) {
                 rewardAmounts[i] = IERC20(token).balanceOf(address(this));
+            } else {
+                rewardAmounts[i] = IERC20(_rewardTokens[i + 1].token).balanceOf(address(this));
+                if (_rewardTokens[i + 1].token == address(stakingToken)) {
+                    rewardAmounts[i] = rewardAmounts[i].sub(_totalSupply);
+                }
             }
         }
 
@@ -239,6 +245,7 @@ contract MultiRewardsStake is ReentrancyGuard {
     }
 
     function removeRewardToken(address token) public onlyDistributor updateReward(address(0)) {
+        require(_totalRewardTokens > 1, "Cannot have 0 reward tokens");
         // Get the index of token to remove
         uint indexToDelete = _rewardTokenToIndex[token];
 
