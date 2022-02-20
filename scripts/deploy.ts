@@ -13,13 +13,17 @@ async function main() {
   // manually to make sure everything is compiled
   // await hre.run('compile');
 
-  // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  const accounts = await ethers.getSigners();
 
-  await greeter.deployed();
+  const Stake = await ethers.getContractFactory("MultiRewardsStake");
+  // Fill in reward tokens in array, and staking token as final perameter 
+  const stake = await Stake.deploy(
+    accounts[0].address,
+    ['', ''],
+    ''
+  );
+  await stake.deployed();
 
-  console.log("Greeter deployed to:", greeter.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
