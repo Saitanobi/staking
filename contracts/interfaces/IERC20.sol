@@ -27,6 +27,11 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 
     /**
+     * @dev Returns the amount of decimals in the token
+     */
+    function decimals() external view returns (uint256);
+
+    /**
      * @dev Returns the remaining number of tokens that `spender` will be
      * allowed to spend on behalf of `owner` through {transferFrom}. This is
      * zero by default.
