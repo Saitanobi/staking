@@ -69,5 +69,7 @@ describe("MultiRewardsStake", function () {
     expect(Number(ethers.utils.formatEther(earned2[0]))).to.greaterThan(0);
     expect(Number(ethers.utils.formatEther(earned2[1]))).to.greaterThan(0);
     expect(Number(ethers.utils.formatEther(earned2[2]))).to.greaterThan(0);
+
+    await stake.connect(accounts[0]).getReward();
   });
 });
