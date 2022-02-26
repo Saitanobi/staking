@@ -33,7 +33,17 @@ const config: HardhatUserConfig = {
     }
   },
   networks: {
+    mainnet: {
+      url: process.env.ALCHEMY || "",
+      accounts: {
+        mnemonic: process.env.MNEMONIC || ""
+      }
+    },
     hardhat: {
+      chainId: 1337,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
       forking: {
         url: process.env.ALCHEMY || "",
         blockNumber: 14204850

@@ -1,15 +1,13 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { expect } from "chai";
-import { ethers } from "hardhat";
-import { approve, getBalance, makeSwap } from "../scripts/utils";
+import { ethers, run } from "hardhat";
+import { approve, getBalance, makeSwap } from "./utils";
 
 const WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 const SAITANOBI = "0x5e9f35e8163c44cd7e606bdd716abed32ad2f1c6";
 const SAITAMA = "0x8b3192f5eebd8579568a2ed41e6feb402f93f73f";
 const SHIBNOBI = "0xab167E816E4d76089119900e941BEfdfA37d6b32";
 
-describe("MultiRewardsStake", function () {
-  it("Should allow add tokens, remove tokens, stake, and withdraw", async function () {
+async function main() {
     const accounts: SignerWithAddress[] = await ethers.getSigners();
     const Stake = await ethers.getContractFactory("MultiRewardsStake");
     const stake = await Stake.deploy(
@@ -17,10 +15,6 @@ describe("MultiRewardsStake", function () {
       SAITANOBI
     );
     await stake.deployed();
-
-    console.log(`Deployed: ${stake.address}`);
-
-    expect(await stake.totalRewardTokens()).to.equal(2);
 
     await makeSwap(accounts[0], [WETH, SAITAMA], '4.0');
     await makeSwap(accounts[0], [WETH, SHIBNOBI], '4.0');
@@ -32,6 +26,9 @@ describe("MultiRewardsStake", function () {
     let saitamaBalance = await getBalance(SAITAMA, accounts[0].address);
     let shibnobiBalance = await getBalance(SHIBNOBI, accounts[0].address);
     const saitanobiBalance = await getBalance(SAITANOBI, accounts[0].address);
+
+    // await transfer(SAITAMA, accounts[0], stake.address, saitamaBalance);
+    // await transfer(SHIBNOBI, accounts[0], stake.address, shibnobiBalance);
 
     await approve(SAITAMA, accounts[0], stake.address, saitamaBalance);
     await approve(SHIBNOBI, accounts[0], stake.address, shibnobiBalance);
@@ -55,40 +52,29 @@ describe("MultiRewardsStake", function () {
 
     await stake.depositRewardTokens([saitamaBalance, shibnobiBalance]);
 
+    // const contractBalanceSaitama = await getBalance(SAITAMA, stake.address);
+    // const contractBalanceShibnobi = await getBalance(SHIBNOBI, stake.address);
+
+    // await stake.connect(accounts[0]).notifyRewardAmount([contractBalanceSaitama, contractBalanceShibnobi]);
+
     await ethers.provider.send('evm_mine', []);
 
     const stakeAmount = saitanobiBalance.div(2);
 
     await approve(SAITANOBI, accounts[0], stake.address, stakeAmount);
-    await approve(SAITANOBI, accounts[1], stake.address, await getBalance(SAITANOBI, accounts[0].address));
     await stake.connect(accounts[0]).stake(stakeAmount);
-    await stake.connect(accounts[1]).stake(await getBalance(SAITANOBI, accounts[0].address));
-
-    await ethers.provider.send('evm_mine', []);
-    
-    const earned1 = await stake.earned(accounts[0].address);
-    const earned2 = await stake.earned(accounts[1].address);
-
-    expect(Number(ethers.utils.formatUnits(earned1[0], 'gwei'))).to.greaterThan(0);
-    expect(Number(ethers.utils.formatUnits(earned1[1], 'gwei'))).to.greaterThan(0);
-    expect(Number(ethers.utils.formatUnits(earned2[0], 'gwei'))).to.greaterThan(0);
-    expect(Number(ethers.utils.formatUnits(earned2[1], 'gwei'))).to.greaterThan(0);
 
     await ethers.provider.send('evm_mine', []);
     await ethers.provider.send('evm_mine', []);
     await ethers.provider.send('evm_mine', []);
-    
-    await stake.connect(accounts[0]).exit();
-    await stake.connect(accounts[1]).exit();
-
-    const leftover = await stake.totalSupply();
-
-    expect(Number(leftover)).to.equal(0);
-
-    await stake.connect(accounts[0]).transferOwnership(accounts[1].address);
-
     await ethers.provider.send('evm_mine', []);
 
-    expect(await stake.owner()).to.equal(accounts[1].address);
+    console.log(await stake.earned(accounts[0].address));
+
+    await run('node');
+}
+
+main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
   });
-});
